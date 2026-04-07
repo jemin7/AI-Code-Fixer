@@ -53,10 +53,10 @@ function App() {
           ? { mode: "single", code, language }
           : { mode: "web", html: htmlCode, css: cssCode, js: jsCode };
 
-      const response = await axios.post(
-        "http://localhost:5000/api/review",
-        payload,
-      );
+      const API_URL =
+        import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+      const response = await axios.post(`${API_URL}/api/review`, payload);
       setReview(response.data.review);
     } catch (error) {
       console.error("Error:", error);
