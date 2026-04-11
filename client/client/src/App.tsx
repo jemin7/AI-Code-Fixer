@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
-import ReactMarkdown from "react-markdown";
 import Editor from "@monaco-editor/react";
 
 function App() {
@@ -8,35 +7,19 @@ function App() {
   const [mode, setMode] = useState("single"); // "single" or "web"
   const [activeTab, setActiveTab] = useState("html"); // For Web Mode tabs
 
-  // Single File State
-  const [code, setCode] = useState(
-    () => localStorage.getItem("savedCode") || "",
-  );
+  // Single File State (Removed localStorage to clear on refresh)
+  const [code, setCode] = useState("");
   const [language, setLanguage] = useState("javascript");
 
-  // Web Project States
-  const [htmlCode, setHtmlCode] = useState(
-    () => localStorage.getItem("savedHtml") || "",
-  );
-  const [cssCode, setCssCode] = useState(
-    () => localStorage.getItem("savedCss") || "",
-  );
-  const [jsCode, setJsCode] = useState(
-    () => localStorage.getItem("savedJs") || "",
-  );
+  // Web Project States (Removed localStorage to clear on refresh)
+  const [htmlCode, setHtmlCode] = useState("");
+  const [cssCode, setCssCode] = useState("");
+  const [jsCode, setJsCode] = useState("");
 
   // AI Response States
   const [review, setReview] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // Save everything to LocalStorage
-  useEffect(() => {
-    localStorage.setItem("savedCode", code);
-    localStorage.setItem("savedHtml", htmlCode);
-    localStorage.setItem("savedCss", cssCode);
-    localStorage.setItem("savedJs", jsCode);
-  }, [code, htmlCode, cssCode, jsCode]);
 
   const handleFixCode = async () => {
     // Validation
@@ -53,11 +36,18 @@ function App() {
           ? { mode: "single", code, language }
           : { mode: "web", html: htmlCode, css: cssCode, js: jsCode };
 
-      // Change VITE_BACKEND_URL to VITE_API_URL
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
       const response = await axios.post(`${API_URL}/api/review`, payload);
       setReview(response.data.review);
+
+      // Clear the input boxes automatically after a successful fix
+      if (mode === "single") setCode("");
+      if (mode === "web") {
+        setHtmlCode("");
+        setCssCode("");
+        setJsCode("");
+      }
     } catch (error) {
       console.error("Error:", error);
       setReview("❌ Failed to connect to the AI server.");
@@ -104,7 +94,6 @@ function App() {
       <main className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 h-[70vh]">
         {/* Left Side: Editor Area */}
         <div className="flex-1 flex flex-col bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-lg">
-          {/* Header & Controls */}
           <div className="bg-gray-700 px-4 py-3 border-b border-gray-600 flex justify-between items-center">
             {mode === "single" ? (
               <>
@@ -122,7 +111,6 @@ function App() {
                 </select>
               </>
             ) : (
-              // Web Mode Tabs
               <div className="flex space-x-2">
                 <button
                   onClick={() => setActiveTab("html")}
@@ -146,7 +134,6 @@ function App() {
             )}
           </div>
 
-          {/* Monaco Editor Component */}
           <div className="flex-1">
             {mode === "single" ? (
               <Editor
@@ -163,7 +150,6 @@ function App() {
               />
             ) : (
               <>
-                {/* Conditionally render editors so they keep their state but only one is visible */}
                 <div className={activeTab === "html" ? "h-full" : "hidden"}>
                   <Editor
                     height="100%"
@@ -216,7 +202,7 @@ function App() {
           </div>
         </div>
 
-        {/* Right Side: AI Output Area */}
+        {/* Right Side: AI Output Area (Now looks exactly like the input) */}
         <div className="flex-1 flex flex-col bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-lg relative">
           <div className="bg-gray-700 px-4 py-3 border-b border-gray-600 flex justify-between items-center">
             <h2 className="text-sm font-semibold text-gray-300">Fixed Code</h2>
@@ -230,25 +216,28 @@ function App() {
             )}
           </div>
 
-          <div className="flex-1 p-6 overflow-y-auto text-gray-200">
+          <div className="flex-1 overflow-hidden">
             {loading ? (
-              <div className="animate-pulse space-y-4">
+              <div className="p-6 animate-pulse space-y-4">
                 <div className="h-4 bg-gray-700 rounded w-3/4"></div>
                 <div className="h-4 bg-gray-700 rounded w-full"></div>
                 <div className="h-4 bg-gray-700 rounded w-5/6"></div>
               </div>
             ) : review ? (
-              <div className="prose prose-invert max-w-none">
-                {review === "there is no bug in the code" ? (
-                  <span className="text-emerald-400 font-semibold">
-                    {review}
-                  </span>
-                ) : (
-                  <ReactMarkdown>{review}</ReactMarkdown>
-                )}
-              </div>
+              <Editor
+                height="100%"
+                theme="vs-dark"
+                language="markdown"
+                value={review}
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  wordWrap: "on",
+                }}
+              />
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 italic">
+              <div className="h-full flex items-center justify-center text-gray-500 italic p-6">
                 Awaiting your code...
               </div>
             )}
