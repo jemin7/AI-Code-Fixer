@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; // <-- Added useEffect here
 import axios from "axios";
 import Editor from "@monaco-editor/react";
 
@@ -7,19 +7,36 @@ function App() {
   const [mode, setMode] = useState("single"); // "single" or "web"
   const [activeTab, setActiveTab] = useState("html"); // For Web Mode tabs
 
-  // Single File State (Removed localStorage to clear on refresh)
-  const [code, setCode] = useState("");
+  // Single File State (Reads from session storage on load)
+  const [code, setCode] = useState(
+    () => sessionStorage.getItem("savedCode") || "",
+  );
   const [language, setLanguage] = useState("javascript");
 
-  // Web Project States (Removed localStorage to clear on refresh)
-  const [htmlCode, setHtmlCode] = useState("");
-  const [cssCode, setCssCode] = useState("");
-  const [jsCode, setJsCode] = useState("");
+  // Web Project States (Reads from session storage on load)
+  const [htmlCode, setHtmlCode] = useState(
+    () => sessionStorage.getItem("savedHtml") || "",
+  );
+  const [cssCode, setCssCode] = useState(
+    () => sessionStorage.getItem("savedCss") || "",
+  );
+  const [jsCode, setJsCode] = useState(
+    () => sessionStorage.getItem("savedJs") || "",
+  );
 
   // AI Response States
   const [review, setReview] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // --- NEW: Automatically save text as the user types ---
+  useEffect(() => {
+    sessionStorage.setItem("savedCode", code);
+    sessionStorage.setItem("savedHtml", htmlCode);
+    sessionStorage.setItem("savedCss", cssCode);
+    sessionStorage.setItem("savedJs", jsCode);
+  }, [code, htmlCode, cssCode, jsCode]);
+  // ------------------------------------------------------
 
   const handleFixCode = async () => {
     // Validation
@@ -43,13 +60,8 @@ function App() {
       // Because the AI is now ONLY sending raw code, we can just use it directly!
       setReview(response.data.review.trim());
 
-      // Clear the input boxes
-      if (mode === "single") setCode("");
-      if (mode === "web") {
-        setHtmlCode("");
-        setCssCode("");
-        setJsCode("");
-      }
+      // NOTE: The code that used to delete the input boxes (setCode(""))
+      // has been completely removed so you can compare the before/after!
     } catch (error) {
       console.error("Error:", error);
       setReview("❌ Failed to connect to the AI server.");
@@ -204,7 +216,7 @@ function App() {
           </div>
         </div>
 
-        {/* Right Side: AI Output Area (Now looks exactly like the input) */}
+        {/* Right Side: AI Output Area */}
         <div className="flex-1 flex flex-col bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-lg relative">
           <div className="bg-gray-700 px-4 py-3 border-b border-gray-600 flex justify-between items-center">
             <h2 className="text-sm font-semibold text-gray-300">Fixed Code</h2>
@@ -229,7 +241,7 @@ function App() {
               <Editor
                 height="100%"
                 theme="vs-dark"
-                language="markdown"
+                language={language === "Auto-Detect" ? "javascript" : language} // Matches syntax highlighting to whatever is selected on the left
                 value={review}
                 options={{
                   readOnly: true,
