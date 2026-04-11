@@ -38,9 +38,10 @@ app.post("/api/review", async (req: Request, res: Response): Promise<any> => {
         1. If there are no bugs at all, your ONLY output must be exactly: "there is no bug in the code".
         2. If there ARE bugs, output ONLY the completely fixed and working code.
         3. Do NOT wrap the code in Markdown blocks (do not use \`\`\`html or \`\`\`javascript).
-        4. Explain the bugs you found and how you fixed them using short INLINE COMMENTS directly inside the code.
-        5. Separate the HTML, CSS, and JS clearly using standard comment headers (e.g., , /* CSS */, // JavaScript).
-        6. Do NOT include any conversational text like "Here is your fixed code".
+        4. When you fix a bug, add a SINGLE-LINE comment next to the fixed code (e.g., "// Fix: updated class to id"). 
+        5. DO NOT write multi-line comments or paragraphs. Keep comments under 10 words.
+        6. Separate the HTML, CSS, and JS clearly using standard comment headers (e.g., , /* CSS */, // JavaScript).
+        7. Do NOT include any conversational text.
 
         HTML:
         \n${html || ""}\n
@@ -64,8 +65,9 @@ app.post("/api/review", async (req: Request, res: Response): Promise<any> => {
         1. If there are no bugs or errors in the code, your ONLY output must be exactly: "there is no bug in the code".
         2. If there ARE bugs, your ONLY output must be the completely fixed raw code.
         3. Do NOT wrap the code in Markdown blocks (do not use \`\`\` or language tags).
-        4. Explain the bugs you found and how you fixed them using concise INLINE COMMENTS directly inside the code.
-        5. Do NOT include any conversational text like "Here is the fixed code" or summary paragraphs at the end.
+        4. When you fix a bug, add a SINGLE-LINE comment exactly where the fix was made (e.g., "// Fix: changed <= to <"). 
+        5. DO NOT write multi-line comments or paragraph explanations. Keep all comments strictly under 10 words.
+        6. Do NOT include any conversational text.
 
         Here is the code:
         \n\n${code}
