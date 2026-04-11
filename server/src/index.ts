@@ -16,7 +16,6 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 app.post("/api/review", async (req: Request, res: Response): Promise<any> => {
   try {
-    // We now accept a mode, plus the potential web project files
     const { code, language, mode, html, css, js } = req.body;
 
     const aiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -35,9 +34,13 @@ app.post("/api/review", async (req: Request, res: Response): Promise<any> => {
         Review the following HTML, CSS, and JavaScript code. They are part of the same project.
         Fix any bugs, ensure they are linked properly, and make sure they work together flawlessly.
 
-        CRITICAL INSTRUCTION: If there are absolutely no bugs or errors in any of the provided code, your ONLY output must be exactly the text: "there is no bug in the code".
-
-        If there ARE bugs, provide the completely fixed and working code. Separate your response into distinct Markdown code blocks for HTML, CSS, and JavaScript. Do NOT include any greetings or explanations.
+        CRITICAL RULES:
+        1. If there are no bugs at all, your ONLY output must be exactly: "there is no bug in the code".
+        2. If there ARE bugs, output ONLY the completely fixed and working code.
+        3. Do NOT wrap the code in Markdown blocks (do not use \`\`\`html or \`\`\`javascript).
+        4. Explain the bugs you found and how you fixed them using short INLINE COMMENTS directly inside the code.
+        5. Separate the HTML, CSS, and JS clearly using standard comment headers (e.g., , /* CSS */, // JavaScript).
+        6. Do NOT include any conversational text like "Here is your fixed code".
 
         HTML:
         \n${html || ""}\n
@@ -49,7 +52,7 @@ app.post("/api/review", async (req: Request, res: Response): Promise<any> => {
         \n${js || "// No JS provided"}\n
       `;
     } else {
-      // 📄 SINGLE FILE PROMPT (Your existing setup)
+      // 📄 SINGLE FILE PROMPT
       if (!code)
         return res.status(400).json({ error: "Please provide some code." });
 
@@ -57,9 +60,12 @@ app.post("/api/review", async (req: Request, res: Response): Promise<any> => {
       prompt = `
         You are an expert ${langContext} developer. Review the following code and fix any bugs. 
         
-        CRITICAL INSTRUCTION: If there are no bugs or errors in the code, your ONLY output must be exactly the text: "there is no bug in the code".
-        
-        If there ARE bugs, your ONLY output must be the completely fixed and working code enclosed in a single Markdown code block. Do NOT include any greetings, explanations, or bug identification text.
+        CRITICAL RULES:
+        1. If there are no bugs or errors in the code, your ONLY output must be exactly: "there is no bug in the code".
+        2. If there ARE bugs, your ONLY output must be the completely fixed raw code.
+        3. Do NOT wrap the code in Markdown blocks (do not use \`\`\` or language tags).
+        4. Explain the bugs you found and how you fixed them using concise INLINE COMMENTS directly inside the code.
+        5. Do NOT include any conversational text like "Here is the fixed code" or summary paragraphs at the end.
 
         Here is the code:
         \n\n${code}
