@@ -39,8 +39,23 @@ function App() {
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
       const response = await axios.post(`${API_URL}/api/review`, payload);
-      setReview(response.data.review);
-
+      
+      // --- THE NEW CLEANUP CODE ---
+      let rawReview = response.data.review;
+      
+      // Look for code wrapped in ``` and extract only the code inside
+      const match = rawReview.match(/```[a-zA-Z]*\n([\s\S]*?)```/);
+      if (match) {
+        rawReview = match[1]; 
+      } else {
+        // Fallback: Just strip any backticks if it didn't use a clean block
+        rawReview = rawReview.replace(/```[a-zA-Z]*\n?/g, '').replace(/```/g, '');
+      }
+      
+      // Set the clean text into the editor
+      setReview(rawReview.trim());
+      // ----------------------------
+      
       // Clear the input boxes automatically after a successful fix
       if (mode === "single") setCode("");
       if (mode === "web") {
@@ -48,13 +63,9 @@ function App() {
         setCssCode("");
         setJsCode("");
       }
+
     } catch (error) {
-      console.error("Error:", error);
-      setReview("❌ Failed to connect to the AI server.");
-    } finally {
-      setLoading(false);
-    }
-  };
+// ... rest of your code
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(review);
