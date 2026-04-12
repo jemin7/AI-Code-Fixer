@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react"; // <-- Added useEffect here
+import { useState, useEffect } from "react"; 
 import axios from "axios";
 import Editor from "@monaco-editor/react";
 
 function App() {
-  // Mode & UI State
-  const [mode, setMode] = useState("single"); // "single" or "web"
-  const [activeTab, setActiveTab] = useState("html"); // For Web Mode tabs
+  
+  const [mode, setMode] = useState("single"); 
+  const [activeTab, setActiveTab] = useState("html"); 
 
-  // Single File State (Reads from session storage on load)
+  
   const [code, setCode] = useState(
     () => sessionStorage.getItem("savedCode") || "",
   );
   const [language, setLanguage] = useState("javascript");
 
-  // Web Project States (Reads from session storage on load)
+  
   const [htmlCode, setHtmlCode] = useState(
     () => sessionStorage.getItem("savedHtml") || "",
   );
@@ -24,22 +24,22 @@ function App() {
     () => sessionStorage.getItem("savedJs") || "",
   );
 
-  // AI Response States
+  
   const [review, setReview] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // --- NEW: Automatically save text as the user types ---
+  
   useEffect(() => {
     sessionStorage.setItem("savedCode", code);
     sessionStorage.setItem("savedHtml", htmlCode);
     sessionStorage.setItem("savedCss", cssCode);
     sessionStorage.setItem("savedJs", jsCode);
   }, [code, htmlCode, cssCode, jsCode]);
-  // ------------------------------------------------------
+  
 
   const handleFixCode = async () => {
-    // Validation
+    
     if (mode === "single" && !code.trim()) return;
     if (mode === "web" && !htmlCode.trim() && !cssCode.trim() && !jsCode.trim())
       return;
@@ -53,15 +53,15 @@ function App() {
           ? { mode: "single", code, language }
           : { mode: "web", html: htmlCode, css: cssCode, js: jsCode };
 
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const API_URL = import.meta.env.VITE_API_URL || "http:
 
       const response = await axios.post(`${API_URL}/api/review`, payload);
 
-      // Because the AI is now ONLY sending raw code, we can just use it directly!
+      
       setReview(response.data.review.trim());
 
-      // NOTE: The code that used to delete the input boxes (setCode(""))
-      // has been completely removed so you can compare the before/after!
+      
+      
     } catch (error) {
       console.error("Error:", error);
       setReview("❌ Failed to connect to the AI server.");
@@ -241,7 +241,7 @@ function App() {
               <Editor
                 height="100%"
                 theme="vs-dark"
-                language={language === "Auto-Detect" ? "javascript" : language} // Matches syntax highlighting to whatever is selected on the left
+                language={language === "Auto-Detect" ? "javascript" : language} 
                 value={review}
                 options={{
                   readOnly: true,
